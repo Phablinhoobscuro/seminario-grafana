@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: "Monitoramento API Node"
+    orgId: 1
+    folder: "Monitoramento"
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

@@ -1,16 +1,20 @@
 {
-  "name": "app",
+  "name": "api-seminario-grafana",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
- "scripts": {
-  "start": "node server.js"
-},
-  "keywords": [],
-  "author": "",
+  "description": "API Express monitorada com Prometheus e Grafana",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["express", "prometheus", "grafana", "monitoramento"],
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
-    "express": "^5.3.0"
+    "express": "^5.1.0",
+    "prom-client": "^15.1.3"
   }
 }

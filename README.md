@@ -25,7 +25,7 @@ Grafana
 Dashboard
 ```
 
-Na versão atual, os três serviços também podem ser executados de forma integrada com Docker Compose.
+Na versão atual, os três serviços são executados de forma integrada com Docker Compose.
 
 ---
 
@@ -49,15 +49,15 @@ Na versão atual, os três serviços também podem ser executados de forma integ
 
 ```text
 ┌─────────────────────────────────────────────┐
-│              Rede Docker                    │
-│                                             │
-│  API Node.js :3000                          │
-│        │                                    │
-│        ▼                                    │
-│  Prometheus :9090                           │
-│        │                                    │
-│        ▼                                    │
-│  Grafana :3000                              │
+│              Rede Docker                   │
+│                                            │
+│  API Node.js :3000                         │
+│        │                                   │
+│        ▼                                   │
+│  Prometheus :9090                          │
+│        │                                   │
+│        ▼                                   │
+│  Grafana :3000                             │
 └─────────────────────────────────────────────┘
 ```
 
@@ -78,9 +78,7 @@ Grafana    → http://prometheus:9090
 
 ---
 
-## Estrutura planejada para o repositório
-
-A estrutura definitiva será consolidada na Fase 4:
+## Estrutura atual do repositório
 
 ```text
 seminario-grafana/
@@ -88,7 +86,8 @@ seminario-grafana/
 │   ├── server.js
 │   ├── package.json
 │   ├── package-lock.json
-│   └── Dockerfile
+│   ├── Dockerfile
+│   └── .dockerignore
 │
 ├── prometheus/
 │   └── prometheus.yml
@@ -108,7 +107,7 @@ seminario-grafana/
 └── README.md
 ```
 
-> Atualmente parte do ambiente Docker ainda está em uma estrutura intermediária de testes. A consolidação para a raiz do projeto será realizada na Fase 4.
+O ambiente Docker foi consolidado na estrutura principal do repositório durante a Fase 4. A antiga estrutura intermediária `app/Ambientes/...` foi removida após a validação da nova organização.
 
 ---
 
@@ -326,19 +325,62 @@ http://prometheus:9090
 
 ## Fase 4 — Consolidação do ambiente e finalização do dashboard
 
-**Status: Planejada / próxima fase 🟡**
+**Status: Em andamento 🟡**
 
-Como parte do dashboard e da infraestrutura já foi adiantada durante as Fases 2 e 3, a Fase 4 foi reformulada.
+Como parte do dashboard e da infraestrutura já foi adiantada durante as Fases 2 e 3, a Fase 4 foi reformulada para consolidar a estrutura atual e finalizar os elementos necessários para a demonstração.
 
 ### Tarefa 1 — Consolidar o ambiente Docker no repositório principal
 
-Objetivo:
+**Status: Concluída ✅**
 
-- remover a estrutura intermediária `Ambientes/...`;
-- incorporar Docker Compose, Dockerfile, Prometheus e Grafana à estrutura oficial do projeto;
-- garantir que o ambiente continue executando diretamente pela raiz do repositório.
+O ambiente Docker foi consolidado na estrutura principal do repositório.
+
+Foram realizadas as seguintes alterações:
+
+- remoção da estrutura intermediária `app/Ambientes/...`;
+- incorporação do `docker-compose.yml` à raiz do projeto;
+- manutenção da API Node.js e do `Dockerfile` dentro de `app/`;
+- consolidação do `prometheus.yml` em `prometheus/`;
+- consolidação do provisioning e do dashboard em `grafana/`;
+- criação do `.dockerignore`;
+- atualização do `package.json` e `package-lock.json`;
+- proteção do arquivo `.env` por meio do `.gitignore`;
+- remoção de `node_modules` do controle de versão;
+- normalização do nome `prometheus.yml`.
+
+Após a remoção da estrutura antiga, o ambiente foi reconstruído utilizando:
+
+```powershell
+docker compose down
+docker compose up -d --build
+docker compose ps
+```
+
+Resultado:
+
+```text
+API          → Up / healthy
+Prometheus   → Up
+Grafana      → Up
+```
+
+Também foram validados:
+
+- `GET /` → HTTP 200;
+- `GET /health` → HTTP 200;
+- `GET /api/test` → HTTP 200;
+- `GET /metrics` → HTTP 200;
+- target `api` → UP no Prometheus;
+- target `prometheus` → UP no Prometheus;
+- provisioning automático do datasource;
+- provisioning automático do dashboard;
+- atualização dos gráficos após geração de carga.
+
+A reconstrução realizada depois da exclusão de `app/Ambientes/...` comprovou que o ambiente consolidado não depende mais da antiga estrutura intermediária.
 
 ### Tarefa 2 — Ajustar instrumentação e excluir `/health`
+
+**Status: Próxima tarefa ⏳**
 
 O Docker executa requisições periódicas em:
 
@@ -355,9 +397,23 @@ A instrumentação será ajustada para ignorar:
 /health
 ```
 
-O healthcheck continuará funcionando, mas não afetará os indicadores de tráfego da aplicação.
+O healthcheck continuará funcionando normalmente, mas as requisições automáticas de `/health` deixarão de incrementar:
+
+```text
+api_http_requests_total
+```
+
+e:
+
+```text
+api_http_request_duration_seconds
+```
+
+Essa alteração permitirá que os indicadores representem apenas o tráfego relevante da aplicação.
 
 ### Tarefa 3 — Completar os indicadores do dashboard
+
+**Status: Pendente ⬜**
 
 Serão adicionados painéis do tipo **Stat** para:
 
@@ -367,6 +423,8 @@ Serão adicionados painéis do tipo **Stat** para:
 As consultas existentes também serão revisadas.
 
 ### Tarefa 4 — Finalizar layout, filtros/variáveis e alerta
+
+**Status: Pendente ⬜**
 
 Serão realizados:
 
@@ -381,7 +439,7 @@ Serão realizados:
 
 ## Fase 5 — Slides e demonstração
 
-**Status: Pendente**
+**Status: Pendente ⬜**
 
 Será preparada a apresentação do seminário contendo:
 
@@ -403,7 +461,7 @@ A demonstração prática deverá utilizar o ambiente Docker consolidado.
 
 ## Fase 6 — Validação final
 
-**Status: Pendente**
+**Status: Pendente ⬜**
 
 Antes da entrega serão realizados:
 
@@ -497,7 +555,8 @@ up{job="api"}
 
 - Docker Desktop;
 - Docker Compose;
-- WSL 2 no Windows.
+- WSL 2 no Windows;
+- Git.
 
 ### Validar instalação
 
@@ -509,7 +568,7 @@ docker info
 
 ## Configurar variáveis de ambiente
 
-Quando o projeto estiver consolidado na estrutura definitiva:
+Após clonar o projeto, crie o arquivo `.env` com base no exemplo:
 
 ```powershell
 Copy-Item .env.example .env
@@ -525,9 +584,11 @@ GRAFANA_USER=admin
 GRAFANA_PASSWORD=defina_uma_senha_local
 ```
 
-> O arquivo `.env` não deve ser versionado.
+> O arquivo `.env` contém configurações locais e não deve ser versionado.
 
 ## Subir o ambiente
+
+Na raiz do repositório:
 
 ```powershell
 docker compose config --quiet
@@ -538,6 +599,14 @@ Consultar os containers:
 
 ```powershell
 docker compose ps
+```
+
+Resultado esperado:
+
+```text
+API          → Up / healthy
+Prometheus   → Up
+Grafana      → Up
 ```
 
 ## Acessar os serviços
@@ -554,6 +623,14 @@ Targets do Prometheus:
 
 ```text
 http://localhost:9190/targets
+```
+
+Dashboard do Grafana:
+
+```text
+Dashboards
+└── Monitoramento
+    └── Monitoramento API Node.js
 ```
 
 ## Encerrar o ambiente
@@ -602,7 +679,7 @@ Validação e entrega
 Fase 1  ✅ Concluída
 Fase 2  ✅ Concluída
 Fase 3  ✅ Concluída
-Fase 4  🟡 Próxima fase
+Fase 4  🟡 Em andamento — Tarefa 1 concluída
 Fase 5  ⬜ Pendente
 Fase 6  ⬜ Pendente
 ```
@@ -625,4 +702,6 @@ Grafana
 Dashboard
 ```
 
-A próxima etapa será consolidar os arquivos do ambiente Docker na estrutura principal do repositório e finalizar o dashboard para a apresentação.
+A consolidação do ambiente Docker foi concluída e validada após a remoção da antiga estrutura intermediária.
+
+A próxima etapa é a **Fase 4 — Tarefa 2: ajustar a instrumentação para que as requisições automáticas do healthcheck em `/health` continuem funcionando, mas deixem de contaminar os indicadores de tráfego da aplicação**.
