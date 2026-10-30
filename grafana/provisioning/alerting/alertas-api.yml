@@ -1,0 +1,138 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: Monitoramento
+    folder: Monitoramento
+    interval: 1m
+    rules:
+      # ---------------------------------------------------------------------
+      # Alerta 1 - API indisponível
+      # ---------------------------------------------------------------------
+      - uid: api-indisponivel
+        title: API indisponível
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              expr: up{job="api"}
+              instant: true
+              range: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: lt
+                    params:
+                      - 1
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+        # Sem dados (ex.: o alvo sumiu do Prometheus) também conta como indisponível.
+        noDataState: Alerting
+        execErrState: Error
+        for: 1m
+        isPaused: false
+        annotations:
+          summary: A API não está respondendo ao Prometheus
+          description: A métrica up{job="api"} ficou abaixo de 1 por mais de 1 minuto. Verifique o container com "docker compose ps" e "docker compose logs api".
+          __dashboardUid__: monitoramento-api-node
+          __panelId__: "1"
+        labels:
+          severity: critical
+          servico: api
+
+      # ---------------------------------------------------------------------
+      # Alerta 2 - Erros 5xx elevados
+      # ---------------------------------------------------------------------
+      - uid: api-erros-5xx
+        title: Erros 5xx elevados
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              expr: sum(increase(api_http_requests_total{job="api", status_code=~"5.."}[3m]))
+              instant: true
+              range: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 5
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+        # Sem série 5xx = nenhum erro ocorreu, então está tudo bem.
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        isPaused: false
+        annotations:
+          summary: A API está retornando muitos erros 5xx
+          description: Mais de 5 respostas 5xx nos últimos 3 minutos. Veja o painel "Total de erros (5xx)" e os logs da API.
+          __dashboardUid__: monitoramento-api-node
+          __panelId__: "3"
+        labels:
+          severity: warning
+          servico: api
