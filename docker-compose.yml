@@ -45,6 +45,9 @@ services:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?Defina GRAFANA_PASSWORD no arquivo .env}
       GF_USERS_ALLOW_SIGN_UP: "false"
+      # Tema escuro (base preta) e abertura direta no dashboard da demonstração
+      GF_USERS_DEFAULT_THEME: dark
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/monitoramento-api.json
     ports:
       - "${GRAFANA_PORT:-3001}:3000"
     volumes:
